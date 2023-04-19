@@ -38,6 +38,8 @@ class HRSIDDataset(Dataset):
         img_path = self.img_paths[idx]
         sample = self.samples[img_path]
         metadata = sample.metadata
+        frame_size = (metadata['width'], metadata['height'])
+        print("frame_size", frame_size)
         img = Image.open(img_path).convert("RGB")
 
         boxes = []
@@ -56,7 +58,8 @@ class HRSIDDataset(Dataset):
             labels.append(coco_obj.category_id)
             area.append(coco_obj.area)
             iscrowd.append(coco_obj.iscrowd)
-            masks.append(coco_obj.segmentation)
+            masks.append(det.to_segmentation(frame_size=frame_size).mask)
+            # masks.append(det.mask)
 
         target = {}
         target["boxes"] = torch.as_tensor(boxes, dtype=torch.float32)
@@ -64,7 +67,10 @@ class HRSIDDataset(Dataset):
         target["image_id"] = torch.as_tensor([idx])
         target["area"] = torch.as_tensor(area, dtype=torch.float32)
         target["iscrowd"] = torch.as_tensor(iscrowd, dtype=torch.int64)
-        target["masks"] = torch.round(torch.as_tensor(masks, dtype=torch.float))
+
+        masks=torch.as_tensor(masks, dtype=torch.float)
+        print("mask shape", masks.shape)
+        target["masks"] = masks
 
         if self.transforms is not None:
             img, target = self.transforms(img, target)

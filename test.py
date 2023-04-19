@@ -1,81 +1,62 @@
-import torch
+import fiftyone as fo
 import fiftyone.utils.coco as fouc
 from PIL import Image
 
+import torch
+import torch.nn as nn
+import torch.utils
+import torch.utils.data
+from train import train_one_epoch, evaluate
+import torchvision
+from torchvision.models.segmentation import fcn_resnet50, FCN_ResNet50_Weights
+import matplotlib.pyplot as plt
+import os
+import utils
+from DatasetLoaders import HRSIDDataset
 
-class FiftyOneTorchDataset(torch.utils.data.Dataset):
-    """A class to construct a PyTorch dataset from a FiftyOne dataset.
-    
-    Args:
-        fiftyone_dataset: a FiftyOne dataset or view that will be used for training or testing
-        transforms (None): a list of PyTorch transforms to apply to images and targets when loading
-        gt_field ("ground_truth"): the name of the field in fiftyone_dataset that contains the 
-            desired labels to load
-        classes (None): a list of class strings that are used to define the mapping between
-            class names and indices. If None, it will use all classes present in the given fiftyone_dataset.
-    """
 
-    def __init__(
-        self,
-        fiftyone_dataset,
-        transforms=None,
-        gt_field="ground_truth",
-        classes=None,
-    ):
-        self.samples = fiftyone_dataset
-        self.transforms = transforms
-        self.gt_field = gt_field
+# name = "HRSID_train"
+# dataset_dir = os.path.abspath("Datasets/HRSID")
+# label_path = os.path.abspath("Datasets/HRSID/annotations/train2017.json")
+# # The type of the dataset being imported
+# dataset_type = fo.types.COCODetectionDataset
 
-        self.img_paths = self.samples.values("filepath")
+# dataset_train = fo.Dataset.from_dir(
+#     dataset_dir=dataset_dir,
+#     dataset_type=dataset_type,
+#     name=name,
+#     labels_path=label_path
+# )
 
-        self.classes = classes
-        if not self.classes:
-            # Get list of distinct labels that exist in the view
-            self.classes = self.samples.distinct(
-                "%s.detections.label" % gt_field
-            )
+# paths = dataset_train.values("filepath")
+# sample = dataset_train[paths[1]]
+# sample.metadata
 
-        if self.classes[0] != "background":
-            self.classes = ["background"] + self.classes
+# detections = sample["detections"].detections
+# segmentations = sample["segmentations"].detections
+name = "HRSID_test"
+if name in fo.list_datasets():
+    dataset_test = fo.load_dataset(name)
+else:
+    dataset_dir = os.path.abspath("ENEE439/Capstone/Datasets/HRSID")
+    label_path = os.path.abspath("ENEE439/Capstone/Datasets/HRSID/annotations/test2017.json")
+    # The type of the dataset being imported
+    dataset_type = fo.types.COCODetectionDataset
 
-        self.labels_map_rev = {c: i for i, c in enumerate(self.classes)}
+    dataset_test = fo.Dataset.from_dir(
+        dataset_dir=dataset_dir,
+        dataset_type=dataset_type,
+        name=name,
+        labels_path=label_path
+    )
+sample = dataset_test.first()
+frame_size = (sample.metadata["width"], sample.metadata["height"])
+detection = sample["segmentations"]["detections"][0]
 
-    def __getitem__(self, idx):
-        img_path = self.img_paths[idx]
-        sample = self.samples[img_path]
-        metadata = sample.metadata
-        img = Image.open(img_path).convert("RGB")
-
-        boxes = []
-        labels = []
-        area = []
-        iscrowd = []
-        detections = sample[self.gt_field].detections
-        for det in detections:
-            category_id = self.labels_map_rev[det.label]
-            coco_obj = fouc.COCOObject.from_label(
-                det, metadata, category_id=category_id,
-            )
-            x, y, w, h = coco_obj.bbox
-            boxes.append([x, y, x + w, y + h])
-            labels.append(coco_obj.category_id)
-            area.append(coco_obj.area)
-            iscrowd.append(coco_obj.iscrowd)
-
-        target = {}
-        target["boxes"] = torch.as_tensor(boxes, dtype=torch.float32)
-        target["labels"] = torch.as_tensor(labels, dtype=torch.int64)
-        target["image_id"] = torch.as_tensor([idx])
-        target["area"] = torch.as_tensor(area, dtype=torch.float32)
-        target["iscrowd"] = torch.as_tensor(iscrowd, dtype=torch.int64)
-
-        if self.transforms is not None:
-            img, target = self.transforms(img, target)
-
-        return img, target
-
-    def __len__(self):
-        return len(self.img_paths)
-
-    def get_classes(self):
-        return self.classes
+segmentation = detection.to_segmentation(frame_size)
+full_img_mask = segmentation.mask
+print(type(detection))
+print("frame size", frame_size)
+print("detection:", detection)
+print("segmentation:", segmentation)
+print("full img", full_img_mask)
