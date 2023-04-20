@@ -100,7 +100,9 @@ def train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, devi
     metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value}"))
     header = f"Epoch: [{epoch}]"
     for image, target in metric_logger.log_every(data_loader, print_freq, header):
-        image, target = image.to(device), target.to(device)
+        # image, target = image.to(device), target.to(device)
+        image = image.to(device)
+        target = [{k: v.to(device) for k, v in t.items()} for t in target]
         with torch.cuda.amp.autocast(enabled=scaler is not None):
             output = model(image)
             loss = criterion(output, target)

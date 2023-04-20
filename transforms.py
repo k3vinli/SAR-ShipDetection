@@ -77,7 +77,7 @@ class CenterCrop:
 class PILToTensor:
     def __call__(self, image, target):
         image = F.pil_to_tensor(image)
-        target = torch.as_tensor(np.array(target), dtype=torch.int64)
+        #target = torch.as_tensor(np.array(target), dtype=torch.int64)
         return image, target
 
 
