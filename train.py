@@ -103,9 +103,10 @@ def train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, devi
         # image, target = image.to(device), target.to(device)
         image = image.to(device)
         target = [{k: v.to(device) for k, v in t.items()} for t in target]
+        masks = torch.tensor([i['masks'] for i in target])
         with torch.cuda.amp.autocast(enabled=scaler is not None):
             output = model(image)
-            loss = criterion(output, target)
+            loss = criterion(output, masks)
 
         optimizer.zero_grad()
         if scaler is not None:
