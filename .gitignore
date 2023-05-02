@@ -1,4 +1,7 @@
 desktop.ini
 Datasets/HRSID/data
 vision
-
+old_seg_refs
+__pycache__
+testing
+Datasets/Official-SSDD-OPEN
