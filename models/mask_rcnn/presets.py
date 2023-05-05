@@ -2,36 +2,70 @@ import torch
 import transforms as T
 
 
-class SegmentationPresetTrain:
-    def __init__(self, *, base_size, crop_size, hflip_prob=0.5, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
-        min_size = int(0.5 * base_size)
-        max_size = int(2.0 * base_size)
-
-        trans = [T.RandomResize(min_size, max_size)]
-        if hflip_prob > 0:
-            trans.append(T.RandomHorizontalFlip(hflip_prob))
-        trans.extend(
-            [
-                T.RandomCrop(crop_size),
-                T.PILToTensor(),
-                T.ConvertImageDtype(torch.float),
-                T.Normalize(mean=mean, std=std),
-            ]
-        )
-        self.transforms = T.Compose(trans)
+class DetectionPresetTrain:
+    def __init__(self, *, data_augmentation, hflip_prob=0.5, mean=(123.0, 117.0, 104.0)):
+        if data_augmentation == "hflip":
+            self.transforms = T.Compose(
+                [
+                    T.RandomHorizontalFlip(p=hflip_prob),
+                    T.PILToTensor(),
+                    T.ConvertImageDtype(torch.float),
+                ]
+            )
+        elif data_augmentation == "lsj":
+            self.transforms = T.Compose(
+                [
+                    T.ScaleJitter(target_size=(1024, 1024)),
+                    T.FixedSizeCrop(size=(1024, 1024), fill=mean),
+                    T.RandomHorizontalFlip(p=hflip_prob),
+                    T.PILToTensor(),
+                    T.ConvertImageDtype(torch.float),
+                ]
+            )
+        elif data_augmentation == "multiscale":
+            self.transforms = T.Compose(
+                [
+                    T.RandomShortestSize(
+                        min_size=(480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800), max_size=1333
+                    ),
+                    T.RandomHorizontalFlip(p=hflip_prob),
+                    T.PILToTensor(),
+                    T.ConvertImageDtype(torch.float),
+                ]
+            )
+        elif data_augmentation == "ssd":
+            self.transforms = T.Compose(
+                [
+                    T.RandomPhotometricDistort(),
+                    T.RandomZoomOut(fill=list(mean)),
+                    T.RandomIoUCrop(),
+                    T.RandomHorizontalFlip(p=hflip_prob),
+                    T.PILToTensor(),
+                    T.ConvertImageDtype(torch.float),
+                ]
+            )
+        elif data_augmentation == "ssdlite":
+            self.transforms = T.Compose(
+                [
+                    T.RandomIoUCrop(),
+                    T.RandomHorizontalFlip(p=hflip_prob),
+                    T.PILToTensor(),
+                    T.ConvertImageDtype(torch.float),
+                ]
+            )
+        else:
+            raise ValueError(f'Unknown data augmentation policy "{data_augmentation}"')
 
     def __call__(self, img, target):
         return self.transforms(img, target)
 
 
-class SegmentationPresetEval:
-    def __init__(self, *, base_size, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+class DetectionPresetEval:
+    def __init__(self):
         self.transforms = T.Compose(
             [
-                T.RandomResize(base_size, base_size),
                 T.PILToTensor(),
                 T.ConvertImageDtype(torch.float),
-                T.Normalize(mean=mean, std=std),
             ]
         )
 

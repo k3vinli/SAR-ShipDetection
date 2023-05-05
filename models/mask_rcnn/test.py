@@ -12,7 +12,7 @@ from torchvision.models.segmentation import fcn_resnet50, FCN_ResNet50_Weights
 import matplotlib.pyplot as plt
 import os
 import utils
-from DatasetLoaders import HRSIDDataset
+from ENEE439.Capstone.models.DatasetLoaders import HRSIDDataset
 
 
 # name = "HRSID_train"

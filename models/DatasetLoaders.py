@@ -6,7 +6,7 @@ import torch.utils.data
 from torch.utils.data import Dataset
 from PIL import Image
 
-class HRSIDDataset(Dataset):
+class HRSIDSegmentationDataset(Dataset):
     """A class to construct a Pytorch dataset from a FiftyOne dataset
     """
     def __init__(
@@ -39,7 +39,6 @@ class HRSIDDataset(Dataset):
         sample = self.samples[img_path]
         metadata = sample.metadata
         frame_size = (metadata['width'], metadata['height'])
-        print("frame_size", frame_size)
         img = Image.open(img_path).convert("RGB")
 
         boxes = []
@@ -58,7 +57,7 @@ class HRSIDDataset(Dataset):
             labels.append(coco_obj.category_id)
             area.append(coco_obj.area)
             iscrowd.append(coco_obj.iscrowd)
-            masks.append(det.to_segmentation(frame_size=frame_size).mask)
+            masks.append(np.clip((det.to_segmentation(frame_size=frame_size).mask), 0, 1))
             # masks.append(det.mask)
 
         target = {}
@@ -68,8 +67,7 @@ class HRSIDDataset(Dataset):
         target["area"] = torch.as_tensor(area, dtype=torch.float32)
         target["iscrowd"] = torch.as_tensor(iscrowd, dtype=torch.int64)
 
-        masks=torch.as_tensor(masks, dtype=torch.float)
-        print("mask shape", masks.shape)
+        masks=torch.as_tensor(masks, dtype=torch.uint8)
         target["masks"] = masks
 
         if self.transforms is not None:
