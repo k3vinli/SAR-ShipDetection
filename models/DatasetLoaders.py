@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.utils.data
 from torch.utils.data import Dataset
 from PIL import Image
+import numpy as np
 
 class HRSIDSegmentationDataset(Dataset):
     """A class to construct a Pytorch dataset from a FiftyOne dataset
