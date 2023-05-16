@@ -6,7 +6,11 @@ from torch import nn, Tensor
 from torchvision import ops
 from torchvision.transforms import functional as F, InterpolationMode, transforms as T
 
+from scipy.ndimage.filters import uniform_filter
+from scipy.ndimage.measurements import variance
 
+import numpy as np
+import matplotlib.pyplot as plt
 def _flip_coco_person_keypoints(kps, width):
     flip_inds = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15]
     flipped_data = kps[:, flip_inds]
@@ -44,6 +48,34 @@ class RandomHorizontalFlip(T.RandomHorizontalFlip):
                     target["keypoints"] = keypoints
         return image, target
 
+class LeeFilter(nn.Module):
+    def __init__(self, kernel_size=3) -> None:
+        super().__init__()
+        self.kernel_size=kernel_size
+    
+    def forward(
+        self, image: Tensor, target: Optional[Dict[str, Tensor]] = None 
+    ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        
+        image = np.array(image)
+
+        img_mean = uniform_filter(image, (self.kernel_size, self.kernel_size, 3))
+        img_sqr_mean = uniform_filter(image**2, (self.kernel_size, self.kernel_size, 3))
+        img_variance = img_sqr_mean - img_mean**2
+
+        overall_variance = variance(image)
+
+        img_weights = img_variance / (img_variance + overall_variance)
+        image = torch.from_numpy(img_mean + img_weights * (image - img_mean))
+
+        return image, target
+
+class PILToNumpy(nn.Module):
+    def forward(
+        self, image: Tensor, target: Optional[Dict[str, Tensor]] = None
+    ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        image = np.array(image)
+        return image, target
 
 class PILToTensor(nn.Module):
     def forward(
