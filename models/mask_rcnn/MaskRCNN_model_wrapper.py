@@ -97,7 +97,7 @@ def do_training(model,
                 print_freq=10):
     
     data_loader = torch.utils.data.DataLoader(
-        torch_dataset, batch_size=8, shuffle=False, num_workers=8,
+        torch_dataset, batch_size=4, shuffle=False, num_workers=8,
         collate_fn=utils.collate_fn)
     data_loader_test = torch.utils.data.DataLoader(
         torch_dataset_test, batch_size=4, shuffle=False, num_workers=8,
