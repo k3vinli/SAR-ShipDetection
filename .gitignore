@@ -5,3 +5,4 @@ old_seg_refs
 __pycache__
 testing
 Datasets/Official-SSDD-OPEN
+*.pt
