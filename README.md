@@ -1,6 +1,19 @@
 # SAR-ShipDetection
 ENEE439D Capstone Project
 
+Ship Detection with SAR Imagery
+
+# Useage Information
+Install miniconda 
+
+Create development environment by using 
+```
+conda env create -f environment.yml
+```
+
+Environment developed on CUDA12.0
+CUDA versions 11.7 will not work since 11.8 version of PyTorch is installed.
+
 # Directory Structure
 project_dir/<br />
 ├─ Datasets/<br />
@@ -11,11 +24,10 @@ project_dir/<br />
 │  │  │  ├─ train_test2017.json<br />
 │  │  ├─ data/<br />
 │  │  ├─ labels.json<br />
-├─ coco_utils.py<br />
-├─ DatasetLoaders.py<br />
-├─ ENEE439D.ipynb<br />
-├─ presets.py<br />
-├─ test.py<br />
-├─ train.py<br />
-├─ transforms.py<br />
-├─ utils.py<br />
+│  ├─ SSDD/<br />
+├─ models/<br />
+│  ├─ model_name/<br />
+│  │  ├─ model_saved_weights/<br />
+│  ├─ .ipynb file<br />
+│  ├─ *any scripts*.py<br />
+├─ environment.yml<br />
