@@ -12,7 +12,7 @@ conda env create -f environment.yml
 ```
 
 Environment developed on CUDA12.0
-CUDA versions 11.7 will not work since 11.8 version of PyTorch is installed.
+CUDA versions 11.7 will not work since CUDA11.8 version of PyTorch was installed during development.
 
 # Directory Structure
 project_dir/<br />
